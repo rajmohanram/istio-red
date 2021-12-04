@@ -86,13 +86,13 @@ def check_app_health(host, ns, app):
 
     # check inbound http status code
     for key in inbound_requests.keys():
-        if key.startswith(('3', '4', '5')):
+        if key.startswith(('4', '5')):
             app_health = "unhealthy"
             app_health_reason = "HTTP Request Issue (Inbound)"
 
     # check outbound http status code
     for key in outbound_requests.keys():
-        if key.startswith(('3', '4', '5')):
+        if key.startswith(('4', '5')):
             app_health = "unhealthy"
             app_health_reason = "HTTP Request Issue (Outbound)"
 
