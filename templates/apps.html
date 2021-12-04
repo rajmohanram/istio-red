@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <title>ArgoCD | Proj & Apps</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/fontawesome.all.css') }}" />
+    <!-- Google Fonts Roboto -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" />
+    <!-- MDB -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mdb.min.css') }}" />
+    <!-- DataTables.net  -->
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/addons/datatables.min.css') }}">
+    <!-- Custom styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+      <!--Main Navigation-->
+  <header>
+    <!-- Intro settings -->
+    <style>
+      #intro {
+        /* Margin to fix overlapping fixed navbar */
+        margin-top: 58px;
+      }
+
+      @media (max-width: 991px) {
+        #intro {
+          /* Margin to fix overlapping fixed navbar */
+          margin-top: 45px;
+        }
+      }
+    </style>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top">
+      <div class="container-fluid">
+        <!-- Navbar brand -->
+        <a class="navbar-brand" href="{{ url_for('index') }}">
+          <img src="{{ url_for('static', filename='img/istio.png') }}" height="40" alt="" loading="lazy"
+            style="margin-top: -3px;" /> RED SIGNALS
+        </a>
+        <button class="navbar-toggler" type="button" data-mdb-toggle="collapse" data-mdb-target="#navbarExample01"
+          aria-controls="navbarExample01" aria-expanded="false" aria-label="Toggle navigation">
+          <i class="fas fa-bars"></i>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarExample01">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item active">
+              <a class="nav-link" aria-current="page" href="{{ url_for('index') }}">Dashboard</a>
+            </li>
+            <li class="nav-item active">
+              <a class="nav-link" aria-current="page" href="{{ url_for('app_health_details') }}">App Health</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <!-- Navbar -->
+
+    <!-- Jumbotron -->
+    <div id="intro" class="p-2 text-center bg-light">
+      <h1 class="mb-0 h4"></h1>
+    </div>
+    <!-- Jumbotron -->
+  </header>
+  <!--Main Navigation-->
+
+  <!--Main layout-->
+  <main>
+
+
+    <div class="container-fluid">
+      <div class="row">
+        
+        <!--Grid column-->
+        <div class="col-6">
+          
+          <!--Section: Content-->
+          <section>
+            <h4 class="mb-4"><strong></strong></h4>
+            <div class="btn-group mb-4" role="group" aria-label="Basic example">
+              <button type="button" class="btn btn-info btn-sm">{{ app_name|default("Select an App", true) }}</button>
+            </div>
+
+            <!-- Card -->
+            <div class="card">
+              <div class="card-header">
+                <form action="" method="post">
+                  <select id="namespace" name="namespace" class="mdb-select md-form">
+                    <option value="" disabled selected>Namespace</option>
+                    {% for i in ns_list %}
+                    <option value="{{i}}">{{i}}</option>
+                    {% endfor %}
+                  </select>
+                    <select id="app_name" name="app_name" class="mdb-select md-form" onchange="this.form.submit()">
+                      <option value="" disabled selected>Application</option>
+                      {% for i in app_list %}
+                      <option value="{{i}}">{{i}}</option>
+                      {% endfor %}
+                    </select>
+                </form>
+              </div>
+              <div class="card-body">
+                  <table id="dtWkldStats" class="table table-hover" cellspacing="0" width="100%">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Deployment</th>
+                        <th>Desired Replicas</th>
+                        <th>Current Replicas</th>
+                        <th>Available Replicas</th>
+                        <th>Synced Proxies</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for i in wkld_statuses %}
+                      <tr>
+                        <td>{{i[0]}}</td>
+                        <td>{{i[1]}}</td>
+                        <td>{{i[2]}}</td>
+                        <td>{{i[3]}}</td>
+                        <td>{{i[4]}}</td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+              </div>
+            </div>
+            <!-- Card -->
+
+          </section>
+          <!--Section: Content-->
+        </div>
+        <!--Grid column-->
+
+        <!--Grid column-->
+        <div class="col-6">
+          
+          <!--Section: Content-->
+          <section>
+            <h4 class="mb-4"><strong></strong></h4>
+            <div class="btn-group mb-4" role="group" aria-label="Basic example">
+              <button type="button" class="btn btn-info btn-sm">HTTP Request rates</button>
+            </div>
+
+            <!-- Card -->
+            <div class="card">
+              <div class="card-header">
+                <h6>Inbound & Outbound</h6>
+              </div>
+              <div class="card-body">
+                  <table id="dtHttpReq" class="table table-hover" cellspacing="0" width="100%">
+                    <thead class="table-light">
+                      <tr>
+                        <th>HTTP Status codes</th>
+                        <th class="text-success">2xx</th>
+                        <th class="text-danger">3xx</th>
+                        <th class="text-danger">4xx</th>
+                        <th class="text-danger">5xx</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for i in http_status_code_stats %}
+                      <tr>
+                        <td>{{i[0]}}</td>
+                        <td>{{i[1]}}</td>
+                        <td>{{i[2]}}</td>
+                        <td>{{i[3]}}</td>
+                        <td>{{i[4]}}</td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+              </div>
+            </div>
+            <!-- Card -->
+
+          </section>
+          <!--Section: Content-->
+        </div>
+        <!--Grid column-->
+
+      </div>
+    </div>
+
+    
+  </main>
+  <!--Main layout-->
+
+<!-- SCRIPTS  -->
+<!-- JQuery  -->
+<script type="text/javascript" src="{{ url_for('static', filename='js/jquery-3.4.1.min.js') }}"></script>
+<!-- MDB -->
+<script type="text/javascript" src="{{ url_for('static', filename='js/mdb.min.js') }}"></script>
+<!-- DataTables  -->
+<script type="text/javascript" src="{{ url_for('static', filename='js/addons/datatables.min.js') }}"></script>
+<!-- Charts -->
+<script type="text/javascript" src="{{ url_for('static', filename='js/addons/chart.js') }}"></script>
+
+<script>
+  $('#dtWkldStats, #dtHttpReq').DataTable({
+    "pageLength": 10,
+    "searching": false, 
+    "paging": false,
+    "info": false
+  }
+  );
+
+  $('#dtWkldStats_wrapper .dataTables_length, #dtHttpReq_wrapper .dataTables_length').addClass('d-flex flex-row');
+
+  $('#dtWkldStats_wrapper .dataTables_filter, #dtHttpReq_wrapper .dataTables_filter').find('input').each(function () {
+    $('input').attr("placeholder", "Search");
+    $('input').removeClass('form-control-sm');
+  });
+
+  $("#namespace").change(function(){
+      var ns = $(this).val();
+
+      $.ajax({
+          url: '/getapp',
+          type: 'get',
+          data: {ns:ns},
+          dataType: 'json',
+          success:function(response){
+
+              var len = response.length;
+
+              $("#app_name").empty();
+              $("#app_name").append("<option value=''>select app</option>");
+              for( var i = 0; i<len; i++){
+                  var app_name = response[i];
+                  $("#app_name").append("<option value='"+app_name+"'>"+app_name+"</option>");
+              }
+          }
+      });
+
+    });
+</script>
+
+
+</body>
+</html>
+
