@@ -126,8 +126,8 @@ venv.bak/
 dmypy.json
 
 # Pyre type checker
-<<<<<<< HEAD
 .pyre/
-=======
 .pyre/
->>>>>>> 3817321 (initial commit)
+
+# exclude .yaml
+*.yaml
