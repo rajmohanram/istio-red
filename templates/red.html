@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
+    <meta http-equiv="refresh" content="180">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <meta http-equiv="x-ua-compatible" content="ie=edge" />
     <title>Istio | RED </title>
@@ -49,7 +50,7 @@
         <div class="collapse navbar-collapse" id="navbarExample01">
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
             <li class="nav-item active">
-              <a class="nav-link" aria-current="page" href="{{ url_for('index') }}">Dashboard</a>
+              <a class="nav-link" aria-current="page" href="{{ url_for('index') }}">App Dashboard</a>
             </li>
             <li class="nav-item active">
               <a class="nav-link" aria-current="page" href="{{ url_for('app_health_details') }}">App Health</a>
@@ -74,61 +75,38 @@
   <!--Main layout-->
   <main>
 
-
     <div class="container-fluid">
       <div class="row">
         
         <!--Grid column-->
-        <div class="col-6">
+        <div class="col-4">
           
           <!--Section: Content-->
           <section>
             <h4 class="mb-4"><strong></strong></h4>
             <div class="btn-group mb-4" role="group" aria-label="Basic example">
-              <button type="button" class="btn btn-info btn-sm">{{ app_name|default("Select an App", true) }}</button>
+              <button type="button" class="btn btn-warning btn-sm">Request Rates</button>
             </div>
 
             <!-- Card -->
             <div class="card">
-              <div class="card-header">
-                <form action="" method="post">
-                  <select id="namespace" name="namespace" class="mdb-select md-form">
-                    <option value="" disabled selected>Namespace</option>
-                    {% for i in ns_list %}
-                    <option value="{{i}}">{{i}}</option>
-                    {% endfor %}
-                  </select>
-                    <select id="app_name" name="app_name" class="mdb-select md-form" onchange="this.form.submit()">
-                      <option value="" disabled selected>Application</option>
-                      {% for i in app_list %}
-                      <option value="{{i}}">{{i}}</option>
-                      {% endfor %}
-                    </select>
-                </form>
-              </div>
               <div class="card-body">
-                  <table id="dtWkldStats" class="table table-hover" cellspacing="0" width="100%">
-                    <thead class="table-light">
-                      <tr>
-                        <th>Deployment</th>
-                        <th>Desired Replicas</th>
-                        <th>Current Replicas</th>
-                        <th>Available Replicas</th>
-                        <th>Synced Proxies</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {% for i in wkld_statuses %}
-                      <tr>
-                        <td>{{i[0]}}</td>
-                        <td>{{i[1]}}</td>
-                        <td>{{i[2]}}</td>
-                        <td>{{i[3]}}</td>
-                        <td>{{i[4]}}</td>
-                      </tr>
-                      {% endfor %}
-                    </tbody>
-                  </table>
+                <table id="dtAppSync" class="table table-striped" cellspacing="0" width="100%">
+                  <thead>
+                    <tr>
+                      <th>Application</th>
+                      <th>Request Rate</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for i in red_rate_list %}
+                    <tr>
+                      <td>{{i[0]}}</td>
+                      <td>{{i[1]}}</td>
+                     </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
               </div>
             </div>
             <!-- Card -->
@@ -139,43 +117,72 @@
         <!--Grid column-->
 
         <!--Grid column-->
-        <div class="col-6">
-          
+        <div class="col-4">
+
           <!--Section: Content-->
           <section>
             <h4 class="mb-4"><strong></strong></h4>
             <div class="btn-group mb-4" role="group" aria-label="Basic example">
-              <button type="button" class="btn btn-info btn-sm">HTTP Request rates</button>
+              <button type="button" class="btn btn-warning btn-sm">Request Errors</button>
             </div>
 
             <!-- Card -->
             <div class="card">
-              <div class="card-header">
-                <h6>Inbound & Outbound</h6>
-              </div>
               <div class="card-body">
-                  <table id="dtHttpReq" class="table table-hover" cellspacing="0" width="100%">
-                    <thead class="table-light">
-                      <tr>
-                        <th>HTTP Status codes</th>
-                        <th class="text-success">2xx</th>
-                        <th class="text-danger">3xx</th>
-                        <th class="text-danger">4xx</th>
-                        <th class="text-danger">5xx</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {% for i in http_status_code_stats %}
-                      <tr>
-                        <td>{{i[0]}}</td>
-                        <td>{{i[1]}}</td>
-                        <td>{{i[2]}}</td>
-                        <td>{{i[3]}}</td>
-                        <td>{{i[4]}}</td>
-                      </tr>
-                      {% endfor %}
-                    </tbody>
-                  </table>
+                <table id="dtAppHealth" class="table table-striped" cellspacing="0" width="100%">
+                  <thead>
+                    <tr>
+                      <th>Application</th>
+                      <th>Error Rate %</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for i in red_error_list %}
+                    <tr>
+                      <td>{{i[0]}}</td>
+                      <td>{{i[1]}}</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <!-- Card -->
+
+          </section>
+          <!--Section: Content-->
+        </div>
+        <!--Grid column-->
+
+        <!--Grid column-->
+        <div class="col-4">
+
+          <!--Section: Content-->
+          <section>
+            <h4 class="mb-4"><strong></strong></h4>
+            <div class="btn-group mb-4" role="group" aria-label="Basic example">
+              <button type="button" class="btn btn-warning btn-sm">Response Duration</button>
+            </div>
+
+            <!-- Card -->
+            <div class="card">
+              <div class="card-body">
+                <table id="dtAppHealth" class="table table-striped" cellspacing="0" width="100%">
+                  <thead>
+                    <tr>
+                      <th>Application</th>
+                      <th>Response Duration (avg ms)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for i in red_duration_list %}
+                    <tr>
+                      <td>{{i[0]}}</td>
+                      <td>{{i[1]}}</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
               </div>
             </div>
             <!-- Card -->
@@ -203,45 +210,61 @@
 <script type="text/javascript" src="{{ url_for('static', filename='js/addons/chart.js') }}"></script>
 
 <script>
-  $('#dtWkldStats, #dtHttpReq').DataTable({
-    "pageLength": 10,
-    "searching": false, 
-    "paging": false,
-    "info": false
+  $('#dtUnhealthyApps, #dtAppSync, #dtAppHealth').DataTable({
+    "pageLength": 10
   }
   );
 
-  $('#dtWkldStats_wrapper .dataTables_length, #dtHttpReq_wrapper .dataTables_length').addClass('d-flex flex-row');
+  $('#dtAppSync_wrapper .dataTables_length, #dtAppHealth_wrapper .dataTables_length').addClass('d-flex flex-row');
 
-  $('#dtWkldStats_wrapper .dataTables_filter, #dtHttpReq_wrapper .dataTables_filter').find('input').each(function () {
+  $('#dtAppSync_wrapper .dataTables_filter, #dtAppHealth_wrapper .dataTables_filter').find('input').each(function () {
     $('input').attr("placeholder", "Search");
     $('input').removeClass('form-control-sm');
   });
-
-  $("#namespace").change(function(){
-      var ns = $(this).val();
-
-      $.ajax({
-          url: '/getapp',
-          type: 'get',
-          data: {ns:ns},
-          dataType: 'json',
-          success:function(response){
-
-              var len = response.length;
-
-              $("#app_name").empty();
-              $("#app_name").append("<option value=''>select app</option>");
-              for( var i = 0; i<len; i++){
-                  var app_name = response[i];
-                  $("#app_name").append("<option value='"+app_name+"'>"+app_name+"</option>");
-              }
-          }
-      });
-
-    });
 </script>
 
+<!-- Charts -->
+<script>
+    //pie
+    var ctxP = document.getElementById("pieChart").getContext('2d');
+    var myPieChart = new Chart(ctxP, {
+      type: 'pie',
+      data: {
+        labels: ["Healthy", "Unhealthy", "Unknown"],
+        datasets: [{
+          data: {{ app_count }},
+          backgroundColor: ["#46BFBD", "#E74C3C", "#808B96"],
+          hoverBackgroundColor: ["#5AD3D1", "#F1948A", "#ABB2B9"]
+        }]
+      },
+      options: {
+        responsive: true,
+        legend: {
+            position: "right"
+        }
+      }
+    });
+
+    //doughnut
+    var ctxD = document.getElementById("doughnutChart").getContext('2d');
+    var myLineChart = new Chart(ctxD, {
+      type: 'doughnut',
+      data: {
+        labels: ["HTTP Request Issues", "Workload Issues"],
+        datasets: [{
+          data: {{ issues_count }},
+          backgroundColor: ["#E67E22", "#F1C40F"],
+          hoverBackgroundColor: ["#F0B27A", "#F5CBA7"]
+        }]
+      },
+      options: {
+        responsive: true,
+        legend: {
+            position: "right"
+        }
+      }
+    });
+</script>
 
 </body>
 </html>

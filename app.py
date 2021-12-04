@@ -74,6 +74,22 @@ def index():
 
     # stats for app RED
     app_red_obj = read_yaml('app_red.yaml')
+    red_rate_count = len(app_red_obj['rate'])
+    red_error_count = len(app_red_obj['error'])
+    red_duration_count = len(app_red_obj['duration'])
+    red_count = [red_rate_count, red_error_count, red_duration_count]
+
+    return render_template("index.html", app_count=app_count, issues_count=issues_count,
+                           unhealthy_app_list=unhealthy_app_list, red_count=red_count)
+
+
+# index page
+@app.route("/red")
+def red_dash():
+    app_health_obj = read_yaml('app_health.yaml')
+
+    # stats for app RED
+    app_red_obj = read_yaml('app_red.yaml')
     red_rate_list = list()
     for item in app_red_obj['rate']:
         red_rate_list.append([item['app'], item['rate']])
@@ -84,8 +100,7 @@ def index():
     for item in app_red_obj['duration']:
         red_duration_list.append([item['app'], item['duration']])
 
-    return render_template("index.html", app_count=app_count, issues_count=issues_count,
-                           unhealthy_app_list=unhealthy_app_list, red_rate_list=red_rate_list,
+    return render_template("red.html", red_rate_list=red_rate_list,
                            red_error_list=red_error_list, red_duration_list=red_duration_list)
 
 
@@ -137,4 +152,4 @@ def apps_in_namespace():
 
 # main driver function
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port='5000', debug=None)
+    app.run(host='0.0.0.0', port='5000', debug=True)

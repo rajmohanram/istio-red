@@ -5,7 +5,7 @@
     <meta http-equiv="refresh" content="180">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <meta http-equiv="x-ua-compatible" content="ie=edge" />
-    <title>Istio | RED Dashboard</title>
+    <title>Istio | RED </title>
     <!-- Font Awesome -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/fontawesome.all.css') }}" />
     <!-- Google Fonts Roboto -->
@@ -50,10 +50,13 @@
         <div class="collapse navbar-collapse" id="navbarExample01">
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
             <li class="nav-item active">
-              <a class="nav-link" aria-current="page" href="{{ url_for('index') }}">Dashboard</a>
+              <a class="nav-link" aria-current="page" href="{{ url_for('index') }}">App Dashboard</a>
             </li>
             <li class="nav-item active">
               <a class="nav-link" aria-current="page" href="{{ url_for('app_health_details') }}">App Health</a>
+            </li>
+            <li class="nav-item active">
+              <a class="nav-link" aria-current="page" href="{{ url_for('red_dash') }}">RED </a>
             </li>
           </ul>
         </div>
@@ -76,7 +79,7 @@
       <div class="row">
         
         <!--Grid column-->
-        <div class="col-6">
+        <div class="col-4">
           
           <!--Section: Content-->
           <section class="text-center">
@@ -91,7 +94,7 @@
               <!-- Card content -->
               <div class="card-body card-body-cascade text-center">
 
-                <canvas id="pieChart" height="100px"></canvas>
+                <canvas id="appHealthChart" height="100px"></canvas>
 
               </div>
               <!-- Card content -->
@@ -105,7 +108,7 @@
         <!--Grid column-->
 
         <!--Grid column-->
-        <div class="col-6">
+        <div class="col-4">
 
           <!--Section: Content-->
           <section class="text-center">
@@ -120,7 +123,36 @@
               <!-- Card content -->
               <div class="card-body card-body-cascade text-center">
 
-                <canvas id="doughnutChart" height="100px"></canvas>
+                <canvas id="appHealthIssuesChart" height="100px"></canvas>
+
+              </div>
+              <!-- Card content -->
+
+            </div>
+            <!-- Card -->
+
+          </section>
+          <!--Section: Content-->
+        </div>
+        <!--Grid column-->
+
+        <!--Grid column-->
+        <div class="col-4">
+
+          <!--Section: Content-->
+          <section class="text-center">
+            <h4 class="mb-2"><strong></strong></h4>
+            <div class="btn-group mb-2" role="group" aria-label="Basic example">
+              <button type="button" class="btn btn-light btn-sm">RED Issues</button>
+            </div>
+
+            <!-- Card -->
+            <div class="card">
+
+              <!-- Card content -->
+              <div class="card-body card-body-cascade text-center">
+
+                <canvas id="redChart" height="100px"></canvas>
 
               </div>
               <!-- Card content -->
@@ -182,126 +214,6 @@
       </div>
     </div>
 
-    <div class="container-fluid">
-      <div class="row">
-        
-        <!--Grid column-->
-        <div class="col-4">
-          
-          <!--Section: Content-->
-          <section>
-            <h4 class="mb-4"><strong></strong></h4>
-            <div class="btn-group mb-4" role="group" aria-label="Basic example">
-              <button type="button" class="btn btn-warning btn-sm">Request Rates</button>
-            </div>
-
-            <!-- Card -->
-            <div class="card">
-              <div class="card-body">
-                <table id="dtAppSync" class="table table-striped" cellspacing="0" width="100%">
-                  <thead>
-                    <tr>
-                      <th>Application</th>
-                      <th>Request Rate</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for i in red_rate_list %}
-                    <tr>
-                      <td>{{i[0]}}</td>
-                      <td>{{i[1]}}</td>
-                     </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            <!-- Card -->
-
-          </section>
-          <!--Section: Content-->
-        </div>
-        <!--Grid column-->
-
-        <!--Grid column-->
-        <div class="col-4">
-
-          <!--Section: Content-->
-          <section>
-            <h4 class="mb-4"><strong></strong></h4>
-            <div class="btn-group mb-4" role="group" aria-label="Basic example">
-              <button type="button" class="btn btn-warning btn-sm">Request Errors</button>
-            </div>
-
-            <!-- Card -->
-            <div class="card">
-              <div class="card-body">
-                <table id="dtAppHealth" class="table table-striped" cellspacing="0" width="100%">
-                  <thead>
-                    <tr>
-                      <th>Application</th>
-                      <th>Error Rate %</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for i in red_error_list %}
-                    <tr>
-                      <td>{{i[0]}}</td>
-                      <td>{{i[1]}}</td>
-                    </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            <!-- Card -->
-
-          </section>
-          <!--Section: Content-->
-        </div>
-        <!--Grid column-->
-
-        <!--Grid column-->
-        <div class="col-4">
-
-          <!--Section: Content-->
-          <section>
-            <h4 class="mb-4"><strong></strong></h4>
-            <div class="btn-group mb-4" role="group" aria-label="Basic example">
-              <button type="button" class="btn btn-warning btn-sm">Response Duration</button>
-            </div>
-
-            <!-- Card -->
-            <div class="card">
-              <div class="card-body">
-                <table id="dtAppHealth" class="table table-striped" cellspacing="0" width="100%">
-                  <thead>
-                    <tr>
-                      <th>Application</th>
-                      <th>Response Duration (avg ms)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for i in red_duration_list %}
-                    <tr>
-                      <td>{{i[0]}}</td>
-                      <td>{{i[1]}}</td>
-                    </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            <!-- Card -->
-
-          </section>
-          <!--Section: Content-->
-        </div>
-        <!--Grid column-->
-
-      </div>
-    </div>
-
     
   </main>
   <!--Main layout-->
@@ -332,8 +244,8 @@
 
 <!-- Charts -->
 <script>
-    //pie
-    var ctxP = document.getElementById("pieChart").getContext('2d');
+    //pie - app health
+    var ctxP = document.getElementById("appHealthChart").getContext('2d');
     var myPieChart = new Chart(ctxP, {
       type: 'pie',
       data: {
@@ -352,8 +264,8 @@
       }
     });
 
-    //doughnut
-    var ctxD = document.getElementById("doughnutChart").getContext('2d');
+    //doughnut - app health issues
+    var ctxD = document.getElementById("appHealthIssuesChart").getContext('2d');
     var myLineChart = new Chart(ctxD, {
       type: 'doughnut',
       data: {
@@ -362,6 +274,26 @@
           data: {{ issues_count }},
           backgroundColor: ["#E67E22", "#F1C40F"],
           hoverBackgroundColor: ["#F0B27A", "#F5CBA7"]
+        }]
+      },
+      options: {
+        responsive: true,
+        legend: {
+            position: "right"
+        }
+      }
+    });
+
+    //doughnut - red issues
+    var ctxD = document.getElementById("redChart").getContext('2d');
+    var myLineChart = new Chart(ctxD, {
+      type: 'doughnut',
+      data: {
+        labels: ["Request Rates", "Request Errors", "Response Duration"],
+        datasets: [{
+          data: {{ red_count }},
+          backgroundColor: ["#2E86C1", "#BA4A00", "#F1C40F"],
+          hoverBackgroundColor: ["#85C1E9", "#EDBB99", "#F9E79F"]
         }]
       },
       options: {
