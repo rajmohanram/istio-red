@@ -127,7 +127,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-.pyre/
 
-# exclude .yaml
+# yaml files
 *.yaml
