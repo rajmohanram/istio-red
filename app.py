@@ -8,6 +8,7 @@ import os
 # set configuration values
 class Config:
     SCHEDULER_API_ENABLED = True
+    SCHEDULER_TIMEZONE = "Asia/Kolkata"
 
 
 # Flask configurations
@@ -24,19 +25,19 @@ scheduler.start()
 
 
 # get istio enables apps
-@scheduler.task('interval', id='do_find_istio_apps', seconds=300)
+@scheduler.task('interval', id='do_find_istio_apps', seconds=20)
 def find_istio_apps():
     get_istio_applications(kiali_url)
 
 
 # check app health
-@scheduler.task('interval', id='do_app_health', seconds=60)
+@scheduler.task('interval', id='do_app_health', seconds=30)
 def find_app_health():
     app_health(kiali_url)
 
 
 # check red
-@scheduler.task('interval', id='do_app_red', seconds=10)
+@scheduler.task('interval', id='do_app_red', seconds=30)
 def find_app_red():
     app_red(kiali_url, response_duration_threshold)
 
@@ -136,4 +137,4 @@ def apps_in_namespace():
 
 # main driver function
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port='5000', debug=None)

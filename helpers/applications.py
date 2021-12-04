@@ -192,7 +192,7 @@ def check_app_red(host, ns, app):
 # get app RED
 def app_red(istio_url, resp_duration_threshold):
     host = istio_url
-    duration_threshold = resp_duration_threshold
+    duration_threshold = int(resp_duration_threshold)
     logging.info("Reading istio_apps.yaml file")
     with open('istio_apps.yaml', 'r') as f:
         apps_dict = yaml.load(f, Loader=yaml.FullLoader)
