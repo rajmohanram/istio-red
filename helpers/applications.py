@@ -172,8 +172,11 @@ def check_app_red(host, ns, app):
     # find app id in nodes
     app_id = ''
     for node in response['elements']['nodes']:
-        if node['data']['app'] == app:
-            app_id = node['data']['id']
+        try:
+            if node['data']['app'] == app:
+                app_id = node['data']['id']
+        except (KeyError, TypeError):
+            pass
 
     # find stats in edges with matching app id
     request_rate = response_duration = error_percent = 0

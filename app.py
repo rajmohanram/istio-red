@@ -12,7 +12,7 @@ class Config:
 
 
 # Flask configurations
-kiali_url = os.environ.get('KIALI_URL', default='http://kiali.dev.io')
+kiali_url = os.environ.get('KIALI_URL', default='http://10.11.224.25:31188')
 response_duration_threshold = os.environ.get('RESP_DURATION_THRESHOLD', default=10)
 app = Flask(__name__)
 app.config.from_object(Config())
