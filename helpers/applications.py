@@ -94,7 +94,10 @@ def check_app_health(host, ns, app):
     for key in outbound_requests.keys():
         if key.startswith(('4', '5')):
             app_health = "unhealthy"
-            app_health_reason = "HTTP Request Issue (Outbound)"
+            if "HTTP Request Issue (Inbound)" in app_health_reason:
+                app_health_reason = "HTTP Request Issue (Inbound & Outbound)"
+            else:
+                app_health_reason = "HTTP Request Issue (Outbound)"
 
     return app_health, app_health_reason
 
@@ -167,8 +170,8 @@ def get_app_health_details(host, ns, app):
 # Check app RED
 def check_app_red(host, ns, app):
     endpoint = "/namespaces/" + ns + "/applications/" + app + "/graph?graphType=app"
+    logging.info(f"Collecting RED for {app}")
     response = call_kiali_api(host, endpoint)
-
     # find app id in nodes
     app_id = ''
     for node in response['elements']['nodes']:
@@ -182,13 +185,13 @@ def check_app_red(host, ns, app):
     request_rate = response_duration = error_percent = 0
     for node in response['elements']['edges']:
         if node['data']['target'] == app_id:
-            request_rate = node['data']['traffic']['rates']['http']
-            response_duration = node['data']['responseTime']
             try:
+                response_duration = node['data']['responseTime']
+                request_rate = node['data']['traffic']['rates']['http']
                 error_percent = node['data']['traffic']['rates']['httpPercentErr']
             except (KeyError, TypeError):
                 pass
-    logging.info("Collected RED for App")
+
     return float(request_rate), float(error_percent), float(response_duration)
 
 
@@ -196,10 +199,16 @@ def check_app_red(host, ns, app):
 def app_red(istio_url, resp_duration_threshold):
     host = istio_url
     duration_threshold = int(resp_duration_threshold)
-    logging.info("Reading istio_apps.yaml file")
+    logging.info("Routine: Application RED stats.Reading istio_apps.yaml file....")
     with open('istio_apps.yaml', 'r') as f:
         apps_dict = yaml.load(f, Loader=yaml.FullLoader)
         apps_list = apps_dict['namespaces']
+
+    # list of unhealthy app
+    with open('app_health.yaml', 'r') as f:
+        app_health_dict = yaml.load(f, Loader=yaml.FullLoader)
+        unhealthy_apps_list = [item['app'] for item in app_health_dict['unhealthy']
+                               if item['reason'] == "Workload Issue"]
 
     # app_red_yaml
     app_red_yaml = dict()
@@ -213,16 +222,17 @@ def app_red(istio_url, resp_duration_threshold):
         namespace = applications['name']
         app_list = applications['apps']
         for app in app_list:
-            rate, error, duration = check_app_red(host, namespace, app)
-            if rate == 0:
-                tmp_rate_list = {'app': app, 'rate': rate}
-                app_rate_list.append(tmp_rate_list)
-            if error != 0:
-                tmp_error_list = {'app': app, 'error': error}
-                app_error_list.append(tmp_error_list)
-            if duration > duration_threshold:
-                tmp_duration_list = {'app': app, 'duration': duration}
-                app_duration_list.append(tmp_duration_list)
+            if app not in unhealthy_apps_list:
+                rate, error, duration = check_app_red(host, namespace, app)
+                if rate == 0:
+                    tmp_rate_list = {'namespace': namespace, 'app': app, 'rate': rate}
+                    app_rate_list.append(tmp_rate_list)
+                if error != 0:
+                    tmp_error_list = {'namespace': namespace, 'app': app, 'error': error}
+                    app_error_list.append(tmp_error_list)
+                if duration > duration_threshold:
+                    tmp_duration_list = {'namespace': namespace, 'app': app, 'duration': duration}
+                    app_duration_list.append(tmp_duration_list)
     # load app red dict for yaml out
     app_red_yaml['rate'] = app_rate_list
     app_red_yaml['error'] = app_error_list
@@ -232,3 +242,8 @@ def app_red(istio_url, resp_duration_threshold):
     with open('app_red.yaml', 'w') as f:
         document = yaml.dump(app_red_yaml, f)
     logging.info("Updated application RED YAML file")
+
+
+# main driver function
+if __name__ == '__main__':
+    get_istio_applications(kiali_url)

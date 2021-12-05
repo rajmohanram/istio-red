@@ -12,8 +12,10 @@ class Config:
 
 
 # Flask configurations
-kiali_url = os.environ.get('KIALI_URL', default='http://10.11.224.25:31188')
+kiali_url = os.environ.get('KIALI_URL', default='http://kiali.dev.io')
+kiali_ext_url = os.environ.get('KIALI_EXT_URL', default='http://kiali.dev.io')
 response_duration_threshold = os.environ.get('RESP_DURATION_THRESHOLD', default=10)
+scan_interval = os.environ.get('SCAN_INTERVAL', default=20)
 app = Flask(__name__)
 app.config.from_object(Config())
 
@@ -24,84 +26,80 @@ scheduler.init_app(app)
 scheduler.start()
 
 
-# get istio enables apps
-@scheduler.task('interval', id='do_find_istio_apps', seconds=20)
+# Read YAML file
+def read_yaml(filename):
+    try:
+        with open(filename, 'r') as f:
+            obj = yaml.load(f, Loader=yaml.FullLoader)
+        return obj
+    except FileNotFoundError:
+        return None
+
+
+# get istio enables apps - scheduled instance
+@scheduler.task('interval', id='do_find_istio_apps', seconds=scan_interval)
 def find_istio_apps():
     get_istio_applications(kiali_url)
 
 
 # check app health
-@scheduler.task('interval', id='do_app_health', seconds=30)
+@scheduler.task('interval', id='do_app_health', seconds=scan_interval)
 def find_app_health():
-    app_health(kiali_url)
+    if read_yaml('istio_apps.yaml'):
+        app_health(kiali_url)
 
 
 # check red
-@scheduler.task('interval', id='do_app_red', seconds=30)
+@scheduler.task('interval', id='do_app_red', seconds=scan_interval)
 def find_app_red():
-    app_red(kiali_url, response_duration_threshold)
-
-
-# Read YAML file
-def read_yaml(filename):
-    with open(filename, 'r') as f:
-        obj = yaml.load(f, Loader=yaml.FullLoader)
-    return obj
+    if read_yaml('istio_apps.yaml'):
+        app_red(kiali_url, response_duration_threshold)
 
 
 # index page
 @app.route("/")
 def index():
-    app_health_obj = read_yaml('app_health.yaml')
+    # check for app object
+    app_obj = read_yaml('istio_apps.yaml')
+    if not app_obj:
+        return "Server initializing..., please wait for application stats be available"
+    else:
+        # stats for app health
+        app_count = list()
+        issues_count = list()
+        red_count = list()
+        unhealthy_app_list = list()
 
-    # stats for app health
-    healthy_app_count = len(app_health_obj['healthy'])
-    unhealthy_app_count = len(app_health_obj['unhealthy'])
-    unknown_app_count = len(app_health_obj['unknown'])
-    app_count = [healthy_app_count, unhealthy_app_count, unknown_app_count]
+        # app health summary and app health issues summary
+        app_health_obj = read_yaml('app_health.yaml')
+        if app_health_obj:
+            # app health category count
+            healthy_app_count = len(app_health_obj['healthy'])
+            unhealthy_app_count = len(app_health_obj['unhealthy'])
+            unknown_app_count = len(app_health_obj['unknown'])
+            app_count = [healthy_app_count, unhealthy_app_count, unknown_app_count]
+            # app health issue category count
+            workload_issue = http_issue = 0
+            for item in app_health_obj['unhealthy']:
+                tmp_list = [item['namespace'], item['app'], item['reason']]
+                unhealthy_app_list.append(tmp_list)
+                if item['reason'] == "Workload Issue":
+                    workload_issue = workload_issue + 1
+                if item['reason'].find("HTTP Request Issue") == 0:
+                    http_issue = http_issue + 1
+            issues_count = [http_issue, workload_issue]
 
-    # stats for app health issues
-    workload_issue = http_issue = 0
-    unhealthy_app_list = list()
-    for item in app_health_obj['unhealthy']:
-        tmp_list = [item['namespace'], item['app'], item['reason']]
-        unhealthy_app_list.append(tmp_list)
-        if item['reason'] == "Workload Issue":
-            workload_issue = workload_issue + 1
-        if item['reason'].find("HTTP Request Issue") == 0:
-            http_issue = http_issue + 1
-    issues_count = [http_issue, workload_issue]
+        # app red summary
+        app_red_obj = read_yaml('app_red.yaml')
+        if app_red_obj:
+            red_rate_count = len(app_red_obj['rate'])
+            red_error_count = len(app_red_obj['error'])
+            red_duration_count = len(app_red_obj['duration'])
+            red_count = [red_rate_count, red_error_count, red_duration_count]
 
-    # stats for app RED
-    app_red_obj = read_yaml('app_red.yaml')
-    red_rate_count = len(app_red_obj['rate'])
-    red_error_count = len(app_red_obj['error'])
-    red_duration_count = len(app_red_obj['duration'])
-    red_count = [red_rate_count, red_error_count, red_duration_count]
-
-    return render_template("index.html", app_count=app_count, issues_count=issues_count,
-                           unhealthy_app_list=unhealthy_app_list, red_count=red_count)
-
-
-# index page
-@app.route("/red")
-def red_dash():
-    app_health_obj = read_yaml('app_health.yaml')
-
-    # stats for app RED
-    app_red_obj = read_yaml('app_red.yaml')
-    red_rate_list = list()
-    for item in app_red_obj['rate']:
-        red_rate_list.append([item['app'], item['rate']])
-    red_error_list = list()
-    for item in app_red_obj['error']:
-        red_error_list.append([item['app'], item['error']])
-    red_duration_list = list()
-    for item in app_red_obj['duration']:
-        red_duration_list.append([item['app'], item['duration']])
-
-    return render_template("red.html", red_rate_list=red_rate_list,
-                           red_error_list=red_error_list, red_duration_list=red_duration_list)
+        return render_template("index.html", kiali_ext_url=kiali_ext_url,  app_count=app_count,
+                               issues_count=issues_count, red_count=red_count,
+                               unhealthy_app_list=unhealthy_app_list)
 
 
 # Get NS list
@@ -111,6 +109,7 @@ def get_ns_list():
     ns_list = list()
     for item in app_list_obj['namespaces']:
         ns_list.append(item['name'])
+
     return ns_list
 
 
@@ -123,6 +122,7 @@ def get_app_list(namespace):
         if item['name'] == namespace:
             for app in item['apps']:
                 app_list.append(app)
+
     return app_list
 
 
@@ -135,11 +135,21 @@ def app_health_details():
         host = kiali_url
         wkld_statuses, http_status_code_stats = get_app_health_details(host, ns, app_name)
         ns_list = get_ns_list()
+
         return render_template("apps.html", ns_list=ns_list, wkld_statuses=wkld_statuses,
                                http_status_code_stats=http_status_code_stats, app_name=app_name)
     else:
         ns_list = get_ns_list()
-        return render_template("apps.html", ns_list=ns_list)
+        if request.args.get('ns'):
+            ns = request.args.get('ns')
+            app_name = request.args.get('app')
+            host = kiali_url
+            wkld_statuses, http_status_code_stats = get_app_health_details(host, ns, app_name)
+
+            return render_template("apps.html", ns_list=ns_list, wkld_statuses=wkld_statuses,
+                                   http_status_code_stats=http_status_code_stats, app_name=app_name)
+        else:
+            return render_template("apps.html", ns_list=ns_list)
 
 
 # get apps in a namespace (for XHR)
@@ -147,9 +157,31 @@ def app_health_details():
 def apps_in_namespace():
     namespace = request.args.get("ns")
     app_list = get_app_list(namespace)
-    return jsonify(app_list)
+
+    return jsonify(sorted(app_list))
+
+
+# RED page
+@app.route("/red")
+def red_dash():
+    # stats for app RED
+    app_red_obj = read_yaml('app_red.yaml')
+    red_rate_list = list()
+    for item in app_red_obj['rate']:
+        red_rate_list.append([item['namespace'], item['app'], item['rate']])
+    red_error_list = list()
+    for item in app_red_obj['error']:
+        red_error_list.append([item['namespace'], item['app'], item['error']])
+    red_duration_list = list()
+    for item in app_red_obj['duration']:
+        red_duration_list.append([item['namespace'], item['app'], item['duration']])
+
+    return render_template("red.html", red_rate_list=red_rate_list,
+                           red_error_list=red_error_list, red_duration_list=red_duration_list)
 
 
 # main driver function
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port='5000', debug=True)
+    # get istio enables apps - Immediate first instance
+    get_istio_applications(kiali_url)
+    app.run(host='0.0.0.0', port=5000, debug=True)

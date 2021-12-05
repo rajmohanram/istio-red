@@ -190,6 +190,7 @@
                       <th>Namespace</th>
                       <th>Application</th>
                       <th>Health Issue</th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -198,6 +199,21 @@
                       <td>{{i[0]}}</td>
                       <td>{{i[1]}}</td>
                       <td>{{i[2]}}</td>
+                      <td>
+                        <a class="p-1" href="/apphealth?ns={{i[0]}}&app={{i[1]}}">
+                          <img src="/static/img/info.png" alt="info" title="Info">
+                        </a>
+                        {%if 'Workload' in(i[2]) %}
+                        <a class="p-1" target="_blank" href="http://kiali.dev.io/kiali/console/namespaces/{{i[0]}}/workloads/{{i[1]}}?duration=600&refresh=10000">
+                          <img src="/static/img/kiali.png" alt="kiali" title="Kiali">
+                        </a>
+                        {% endif %}
+                        {%if 'HTTP' in(i[2]) %}
+                        <a class="p-1" target="_blank" href="http://kiali.dev.io/kiali/console/namespaces/{{i[0]}}/applications/{{i[1]}}?duration=600&refresh=10000">
+                          <img src="/static/img/kiali.png" alt="kiali" title="Kiali">
+                        </a>
+                        {% endif %}
+                      </td>
                      </tr>
                     {% endfor %}
                   </tbody>
@@ -303,6 +319,7 @@
         }
       }
     });
+
 </script>
 
 </body>
