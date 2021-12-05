@@ -15,7 +15,7 @@ class Config:
 kiali_url = os.environ.get('KIALI_URL', default='http://kiali.dev.io')
 kiali_ext_url = os.environ.get('KIALI_EXT_URL', default='http://kiali.dev.io')
 response_duration_threshold = os.environ.get('RESP_DURATION_THRESHOLD', default=10)
-scan_interval = os.environ.get('SCAN_INTERVAL', default=20)
+scan_interval = int(os.environ.get('SCAN_INTERVAL', default=20))
 app = Flask(__name__)
 app.config.from_object(Config())
 
@@ -176,7 +176,7 @@ def red_dash():
     for item in app_red_obj['duration']:
         red_duration_list.append([item['namespace'], item['app'], item['duration']])
 
-    return render_template("red.html", red_rate_list=red_rate_list,
+    return render_template("red.html", red_rate_list=red_rate_list, kiali_ext_url=kiali_ext_url,
                            red_error_list=red_error_list, red_duration_list=red_duration_list)
 
 
